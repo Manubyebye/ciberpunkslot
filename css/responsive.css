@@ -1,0 +1,248 @@
+/* Tablet Devices */
+@media (max-width: 1024px) {
+    #slotMachine {
+        width: 98%;
+        height: 90%;
+    }
+    
+    .header {
+        padding: 0 30px;
+    }
+    
+    .logo {
+        font-size: 2em;
+    }
+    
+    .game-info {
+        gap: 20px;
+    }
+    
+    .info-box {
+        padding: 12px 20px;
+        min-width: 120px;
+    }
+    
+    .symbol {
+        height: 100px;
+        font-size: 3em;
+    }
+    
+    .spin-btn {
+        padding: 18px 50px;
+        font-size: 1.3em;
+    }
+}
+
+/* Mobile Devices */
+@media (max-width: 768px) {
+    #slotMachine {
+        width: 98%;
+        height: 95%;
+    }
+    
+    .header {
+        padding: 0 20px;
+        flex-direction: column;
+        height: auto;
+        padding: 15px;
+    }
+    
+    .logo {
+        font-size: 1.8em;
+        margin-bottom: 10px;
+    }
+    
+    .game-info {
+        gap: 10px;
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    .info-box {
+        padding: 8px 15px;
+        min-width: 100px;
+        flex: 1;
+    }
+    
+    .info-value {
+        font-size: 1.2em;
+    }
+    
+    .reels-section {
+        padding: 20px;
+        height: 55%;
+    }
+    
+    .symbol {
+        height: 80px;
+        font-size: 2.5em;
+    }
+    
+    .control-panel {
+        padding: 15px 20px;
+        height: 30%;
+    }
+    
+    .bet-controls {
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+    
+    .bet-btn {
+        padding: 10px 15px;
+        font-size: 1em;
+    }
+    
+    .bet-display {
+        padding: 12px 20px;
+        font-size: 1.1em;
+        min-width: 120px;
+    }
+    
+    .spin-controls {
+        gap: 15px;
+    }
+    
+    .spin-btn {
+        padding: 15px 25px;
+        font-size: 1.1em;
+        flex: 1;
+    }
+    
+    .win-message {
+        font-size: 2.5em;
+    }
+    
+    .win-amount {
+        font-size: 1.5em;
+    }
+}
+
+/* Small Mobile Devices */
+@media (max-width: 480px) {
+    .logo {
+        font-size: 1.5em;
+    }
+    
+    .game-info {
+        flex-direction: column;
+        gap: 5px;
+    }
+    
+    .info-box {
+        min-width: auto;
+        padding: 6px 12px;
+    }
+    
+    .reels-container {
+        gap: 5px;
+        padding: 5px;
+    }
+    
+    .symbol {
+        height: 60px;
+        font-size: 2em;
+    }
+    
+    .spin-controls {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .spin-btn {
+        padding: 12px 20px;
+        font-size: 1em;
+    }
+    
+    .loading-text {
+        font-size: 1.5em;
+    }
+    
+    .loading-bar {
+        width: 250px;
+    }
+}
+
+/* Landscape Mode for Mobile */
+@media (max-height: 600px) and (orientation: landscape) {
+    #slotMachine {
+        height: 98%;
+    }
+    
+    .header {
+        height: 20%;
+        padding: 10px 20px;
+    }
+    
+    .reels-section {
+        height: 50%;
+        padding: 10px 20px;
+    }
+    
+    .symbol {
+        height: 60px;
+        font-size: 2em;
+    }
+    
+    .control-panel {
+        height: 30%;
+        padding: 10px 20px;
+    }
+    
+    .spin-btn {
+        padding: 10px 20px;
+        font-size: 1em;
+    }
+}
+
+/* High Resolution Displays */
+@media (min-width: 1920px) {
+    #slotMachine {
+        max-width: 1400px;
+    }
+    
+    .logo {
+        font-size: 3em;
+    }
+    
+    .info-box {
+        padding: 20px 30px;
+        min-width: 180px;
+    }
+    
+    .info-value {
+        font-size: 1.6em;
+    }
+    
+    .symbol {
+        height: 140px;
+        font-size: 4em;
+    }
+    
+    .spin-btn {
+        padding: 25px 70px;
+        font-size: 1.8em;
+    }
+}
+
+/* Touch Device Optimizations */
+@media (hover: none) and (pointer: coarse) {
+    .bet-btn:hover,
+    .spin-btn:hover {
+        transform: scale(1);
+    }
+    
+    .bet-btn:active,
+    .spin-btn:active {
+        transform: scale(0.95);
+    }
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
