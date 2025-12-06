@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/animations.css">
     <link rel="stylesheet" href="css/responsive.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <!-- Loading Screen -->
@@ -48,6 +49,10 @@
                         <div class="info-label">WIN</div>
                         <div class="info-value" id="lastWin">0</div>
                     </div>
+                    <div class="info-box">
+                        <div class="info-label">JACKPOT</div>
+                        <div class="info-value" id="jackpot">5,000</div>
+                    </div>
                 </div>
             </div>
 
@@ -67,16 +72,29 @@
                         <div class="win-amount" id="winAmount">0</div>
                     </div>
                 </div>
+                
+                <!-- Special Features Display -->
+                <div class="features-display" id="featuresDisplay">
+                    <div id="freeSpins" class="feature-tag" style="display: none;">
+                        <i class="fas fa-sync-alt"></i> <span id="freeSpinsCount">0</span> FREE SPINS
+                    </div>
+                    <div id="multiplier" class="feature-tag" style="display: none;">
+                        <i class="fas fa-bolt"></i> <span id="multiplierValue">1</span>X MULTIPLIER
+                    </div>
+                    <div id="bonusActive" class="feature-tag" style="display: none;">
+                        <i class="fas fa-star"></i> BONUS ACTIVE
+                    </div>
+                </div>
             </div>
 
             <!-- Control Panel -->
             <div class="control-panel">
                 <div class="bet-controls">
-                    <button class="bet-btn" id="betDown">- BET</button>
+                    <button class="bet-btn" id="betDown">-50</button>
                     <div class="bet-display">
                         BET: <span id="betDisplay">100</span>
                     </div>
-                    <button class="bet-btn" id="betUp">+ BET</button>
+                    <button class="bet-btn" id="betUp">+50</button>
                 </div>
                 
                 <div class="spin-controls">
@@ -84,13 +102,24 @@
                     <button class="spin-btn" id="spinBtn">SPIN</button>
                     <button class="spin-btn auto-spin" id="maxBet">MAX BET</button>
                 </div>
+                
+                <!-- Audio Controls -->
+                <div class="audio-controls">
+                    <button id="muteBtn" class="audio-btn">
+                        <i class="fas fa-volume-up"></i>
+                    </button>
+                    <button id="musicToggle" class="audio-btn">
+                        <i class="fas fa-music"></i>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 
-    <script src="js/particles.js"></script>
-    <script src="js/ui.js"></script>
     <script src="js/audio.js"></script>
+    <script src="js/particles.js"></script>
     <script src="js/game.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/main.js"></script>
 </body>
 </html>

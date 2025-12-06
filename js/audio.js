@@ -7,9 +7,10 @@ class AudioManager {
         this.isMuted = false;
         this.backgroundMusic = null;
         this.audioContext = null;
-        this.hasUserInteracted = false; // Track if user has interacted
+        this.hasUserInteracted = false;
+        this.isBackgroundMusicStarted = false;
         
-        // Define your audio file paths
+        // Audio file paths
         this.audioFiles = {
             'spin': 'assets/sounds/access-granted-87075.mp3',
             'win': 'assets/sounds/you-win-sfx-442128.mp3',
@@ -29,6 +30,7 @@ class AudioManager {
         this.createAudioContext();
         await this.loadAudioFiles();
         this.setupEventListeners();
+        this.setupAudioControls();
     }
 
     createAudioContext() {
@@ -60,7 +62,6 @@ class AudioManager {
             audio.preload = 'auto';
             audio.src = url;
             
-            // For background music, we don't want it to auto-play
             if (name === 'background') {
                 audio.autoplay = false;
             }
@@ -81,46 +82,59 @@ class AudioManager {
     }
 
     setupEventListeners() {
-        // Handle user interaction for audio unlock
+        // Handle user interaction
         const handleUserInteraction = () => {
             if (!this.hasUserInteracted) {
                 this.hasUserInteracted = true;
                 console.log('👆 User interaction detected - audio unlocked');
                 
-                // Resume audio context if suspended
                 if (this.audioContext && this.audioContext.state === 'suspended') {
                     this.audioContext.resume();
                 }
-                
-                // Remove these listeners after first interaction
-                document.removeEventListener('click', handleUserInteraction);
-                document.removeEventListener('touchstart', handleUserInteraction);
-                document.removeEventListener('keydown', handleUserInteraction);
             }
         };
 
-        // Listen for multiple types of user interaction
         document.addEventListener('click', handleUserInteraction);
         document.addEventListener('touchstart', handleUserInteraction);
         document.addEventListener('keydown', handleUserInteraction);
+    }
+
+    setupAudioControls() {
+        const muteBtn = document.getElementById('muteBtn');
+        const musicToggle = document.getElementById('musicToggle');
         
-        // Also add a global click handler for the game to auto-play background music
-        document.addEventListener('click', (e) => {
-            // Only play background music on first click if not already playing
-            if (this.hasUserInteracted && !this.backgroundMusic) {
-                this.playBackgroundMusic();
-            }
-        });
+        if (muteBtn) {
+            muteBtn.addEventListener('click', () => {
+                const isMuted = this.toggleMute();
+                muteBtn.innerHTML = isMuted ? '<i class="fas fa-volume-mute"></i>' : '<i class="fas fa-volume-up"></i>';
+                muteBtn.title = isMuted ? 'Unmute' : 'Mute';
+            });
+        }
+        
+        if (musicToggle) {
+            musicToggle.addEventListener('click', () => {
+                if (this.backgroundMusic && !this.backgroundMusic.paused) {
+                    this.pauseBackgroundMusic();
+                    musicToggle.classList.remove('active');
+                } else {
+                    this.startBackgroundMusic();
+                    musicToggle.classList.add('active');
+                }
+            });
+        }
     }
 
     playSound(soundName, options = {}) {
-        // Don't play background music through this method
         if (soundName === 'background') {
             console.warn('Use playBackgroundMusic() method for background music');
             return null;
         }
         
-        // For other sounds, check mute status
+        if (!this.hasUserInteracted) {
+            console.log(`⏳ Waiting for user interaction to play ${soundName}`);
+            return null;
+        }
+        
         if (this.isMuted || !this.sounds[soundName]) {
             return null;
         }
@@ -133,24 +147,9 @@ class AudioManager {
             audioClone.loop = true;
         }
         
-        // Try to play the sound
-        const playPromise = audioClone.play();
-        
-        if (playPromise !== undefined) {
-            playPromise.catch(error => {
-                // If we get the user interaction error, try one more time
-                if (error.name === 'NotAllowedError') {
-                    console.log(`⏳ Waiting for user interaction to play ${soundName}`);
-                    // Try again after user interaction
-                    document.addEventListener('click', function tryPlay() {
-                        audioClone.play().catch(e => console.warn(`Still cannot play ${soundName}:`, e));
-                        document.removeEventListener('click', tryPlay);
-                    }, { once: true });
-                } else {
-                    console.warn(`Failed to play sound ${soundName}:`, error);
-                }
-            });
-        }
+        audioClone.play().catch(error => {
+            console.warn(`Failed to play sound ${soundName}:`, error);
+        });
         
         if (!options.loop) {
             audioClone.addEventListener('ended', () => {
@@ -161,9 +160,13 @@ class AudioManager {
         return audioClone;
     }
 
-    playBackgroundMusic() {
-        // Don't start if already playing or muted
+    startBackgroundMusic() {
         if (this.backgroundMusic && !this.backgroundMusic.paused) {
+            return;
+        }
+        
+        if (!this.hasUserInteracted) {
+            console.log('👆 User interaction required before playing music');
             return;
         }
         
@@ -173,54 +176,24 @@ class AudioManager {
         }
         
         if (this.sounds.background) {
-            console.log('🎶 Attempting to play background music...');
+            console.log('🎶 Starting background music...');
             
-            // Create new audio element for background music
             this.backgroundMusic = new Audio(this.audioFiles.background);
             this.backgroundMusic.loop = true;
             this.backgroundMusic.volume = this.musicVolume;
             this.backgroundMusic.preload = 'auto';
             
-            // Try to play
-            const playPromise = this.backgroundMusic.play();
-            
-            if (playPromise !== undefined) {
-                playPromise.then(() => {
+            this.backgroundMusic.play()
+                .then(() => {
                     console.log('✅ Background music started successfully');
-                }).catch(error => {
-                    if (error.name === 'NotAllowedError') {
-                        console.log('⏳ Background music requires user interaction first');
-                        
-                        // Set up a one-time listener to start music on next click
-                        const startOnClick = () => {
-                            this.backgroundMusic.play()
-                                .then(() => {
-                                    console.log('✅ Background music started after user click');
-                                })
-                                .catch(e => {
-                                    console.warn('Still cannot play background music:', e);
-                                });
-                            document.removeEventListener('click', startOnClick);
-                        };
-                        
-                        document.addEventListener('click', startOnClick, { once: true });
-                    } else {
-                        console.error('❌ Failed to play background music:', error);
-                    }
+                    this.isBackgroundMusicStarted = true;
+                })
+                .catch(error => {
+                    console.error('❌ Failed to play background music:', error);
                 });
-            }
         } else {
             console.warn('⚠️ Background music file not loaded');
         }
-    }
-
-    // Method to explicitly start background music (call this from a button click)
-    startBackgroundMusic() {
-        if (!this.hasUserInteracted) {
-            console.log('👆 Please click anywhere on the page first to unlock audio');
-            return;
-        }
-        this.playBackgroundMusic();
     }
 
     pauseBackgroundMusic() {
@@ -248,35 +221,21 @@ class AudioManager {
 
     playWinSound(amount) {
         if (amount > 1000) {
-            this.playBigWinSound();
+            this.playSound('bigWin', { volume: this.sfxVolume * 1.5 });
         } else if (amount > 100) {
-            this.playMediumWinSound();
+            this.playSound('mediumWin', { volume: this.sfxVolume });
         } else {
-            this.playSmallWinSound();
+            this.playSound('smallWin', { volume: this.sfxVolume * 0.7 });
         }
-    }
-
-    playBigWinSound() {
-        this.playSound('bigWin', { volume: this.sfxVolume * 1.5 });
-    }
-
-    playMediumWinSound() {
-        this.playSound('mediumWin', { volume: this.sfxVolume });
-    }
-
-    playSmallWinSound() {
-        this.playSound('smallWin', { volume: this.sfxVolume * 0.7 });
     }
 
     toggleMute() {
         this.isMuted = !this.isMuted;
         
-        // Mute/unmute all loaded sounds
         Object.values(this.sounds).forEach(audio => {
             audio.muted = this.isMuted;
         });
         
-        // Mute/unmute background music
         if (this.backgroundMusic) {
             this.backgroundMusic.muted = this.isMuted;
         }
@@ -295,25 +254,9 @@ class AudioManager {
     setSfxVolume(volume) {
         this.sfxVolume = Math.max(0, Math.min(1, volume));
     }
-    
-    // Check if audio is ready to play
-    isReady() {
-        return this.hasUserInteracted;
-    }
 }
 
 // Initialize Audio Manager
 window.addEventListener('load', () => {
-    console.log('🎮 Game loaded, initializing audio manager...');
     window.audioManager = new AudioManager();
-    
-    // Add a welcome message explaining audio requirements
-    setTimeout(() => {
-        console.log('🎧 TIP: Click anywhere to unlock audio features');
-    }, 1000);
 });
-
-// Export for module usage
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = AudioManager;
-}
