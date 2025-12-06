@@ -296,3 +296,215 @@ class CyberpunkSlot {
 window.addEventListener('load', () => {
     window.slotGame = new CyberpunkSlot();
 });
+
+// MAIN GAME INTEGRATION
+
+// Wait for DOM to be ready
+document.addEventListener('DOMContentLoaded', function() {
+    
+    // Find your spin button - adjust the selector to match your actual button
+    const spinButton = document.querySelector('.spin-button, #spinButton, button.spin, [data-action="spin"]');
+    
+    if (spinButton) {
+        // Store the original onclick handler if it exists
+        const originalOnClick = spinButton.onclick;
+        
+        // Wrap the spin button click handler
+        spinButton.addEventListener('click', function(e) {
+            // Mark user interaction
+            if (window.audioManager && !window.audioManager.hasUserInteracted) {
+                window.audioManager.hasUserInteracted = true;
+            }
+            
+            // Play spin sound
+            if (window.audioManager) {
+                window.audioManager.playSound('spin');
+                
+                // Start background music on first spin
+                if (!window.audioManager.isBackgroundMusicStarted) {
+                    const musicStarted = window.audioManager.startBackgroundMusicOnFirstSpin();
+                    if (musicStarted) {
+                        console.log('🎵 Background music started on first spin!');
+                    }
+                }
+            }
+            
+            // Call original handler if it exists
+            if (originalOnClick) {
+                originalOnClick.call(this, e);
+            }
+        });
+        
+        console.log('✅ Spin button audio integration ready');
+    } else {
+        console.warn('⚠️ Spin button not found. Audio will not play automatically.');
+    }
+    
+    // Add a manual music toggle button (optional)
+    addMusicControls();
+});
+
+// Optional: Add music control buttons to the UI
+function addMusicControls() {
+    const controlsDiv = document.createElement('div');
+    controlsDiv.className = 'audio-controls';
+    controlsDiv.style.cssText = `
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        display: flex;
+        gap: 10px;
+        z-index: 1000;
+    `;
+    
+    const musicToggleBtn = document.createElement('button');
+    musicToggleBtn.className = 'audio-btn';
+    musicToggleBtn.innerHTML = '🔇';
+    musicToggleBtn.title = 'Toggle Music';
+    musicToggleBtn.style.cssText = `
+        padding: 10px 15px;
+        background: linear-gradient(45deg, #ff00ff, #00ffff);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        font-size: 16px;
+        cursor: pointer;
+        box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+        transition: all 0.3s ease;
+    `;
+    
+    const sfxToggleBtn = document.createElement('button');
+    sfxToggleBtn.className = 'audio-btn';
+    sfxToggleBtn.innerHTML = '🔊';
+    sfxToggleBtn.title = 'Toggle SFX';
+    sfxToggleBtn.style.cssText = musicToggleBtn.style.cssText;
+    
+    // Add hover effects
+    [musicToggleBtn, sfxToggleBtn].forEach(btn => {
+        btn.addEventListener('mouseenter', () => {
+            btn.style.transform = 'scale(1.1)';
+            btn.style.boxShadow = '0 0 20px rgba(0, 255, 255, 0.8)';
+        });
+        btn.addEventListener('mouseleave', () => {
+            btn.style.transform = 'scale(1)';
+            btn.style.boxShadow = '0 0 10px rgba(0, 255, 255, 0.5)';
+        });
+    });
+    
+    // Music toggle functionality
+    musicToggleBtn.addEventListener('click', () => {
+        if (window.audioManager) {
+            const isMuted = window.audioManager.toggleMute();
+            musicToggleBtn.innerHTML = isMuted ? '🔇' : '🔊';
+            musicToggleBtn.title = isMuted ? 'Unmute Music' : 'Mute Music';
+        }
+    });
+    
+    // SFX toggle functionality
+    sfxToggleBtn.addEventListener('click', () => {
+        if (window.audioManager) {
+            // Toggle between 0 and 0.7 volume for SFX
+            const currentVolume = window.audioManager.sfxVolume;
+            if (currentVolume > 0) {
+                window.audioManager.setSfxVolume(0);
+                sfxToggleBtn.innerHTML = '🔈';
+                sfxToggleBtn.title = 'Enable SFX';
+            } else {
+                window.audioManager.setSfxVolume(0.7);
+                sfxToggleBtn.innerHTML = '🔊';
+                sfxToggleBtn.title = 'Disable SFX';
+            }
+        }
+    });
+    
+    // Add buttons to page
+    controlsDiv.appendChild(musicToggleBtn);
+    controlsDiv.appendChild(sfxToggleBtn);
+    document.body.appendChild(controlsDiv);
+}
+
+// If you already have a spin function, modify it like this:
+function handleSpin() {
+    // Your existing spin logic here...
+    console.log('🎰 Spinning...');
+    
+    // Play spin sound
+    if (window.audioManager) {
+        window.audioManager.playSound('spin');
+        
+        // Start background music on first spin
+        if (!window.audioManager.isBackgroundMusicStarted) {
+            const musicStarted = window.audioManager.startBackgroundMusicOnFirstSpin();
+            if (musicStarted) {
+                console.log('🎵 Background music started on first spin!');
+                // You could show a notification to the user
+                showNotification('Background music started!', '🎵');
+            }
+        }
+    }
+    
+    // Your reel animation logic...
+    // Your win calculation logic...
+    
+    // When reels stop, play stop sound
+    setTimeout(() => {
+        if (window.audioManager) {
+            window.audioManager.playSound('reelStop');
+        }
+    }, 1000);
+    
+    // When win is calculated
+    setTimeout(() => {
+        const winAmount = calculateWin(); // Your win calculation function
+        if (winAmount > 0 && window.audioManager) {
+            window.audioManager.playWinSound(winAmount);
+        }
+    }, 2000);
+}
+
+// Helper function for notifications
+function showNotification(message, icon = 'ℹ️') {
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: linear-gradient(45deg, #ff00ff, #00ffff);
+        color: white;
+        padding: 10px 20px;
+        border-radius: 10px;
+        font-family: 'Courier New', monospace;
+        font-size: 14px;
+        box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+        z-index: 1001;
+        animation: slideIn 0.3s ease;
+    `;
+    notification.innerHTML = `${icon} ${message}`;
+    document.body.appendChild(notification);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+        notification.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => {
+            document.body.removeChild(notification);
+        }, 300);
+    }, 3000);
+}
+
+// Add CSS animations
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    @keyframes slideOut {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(100%); opacity: 0; }
+    }
+    .audio-btn:hover {
+        transform: scale(1.1) !important;
+        box-shadow: 0 0 20px rgba(0, 255, 255, 0.8) !important;
+    }
+`;
+document.head.appendChild(style);
