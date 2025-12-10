@@ -1,4 +1,4 @@
-// 🎰 SLOT MACHINE GAME
+// 🎰 SLOT MACHINE GAME - MOBILE FIXED
 class SlotGame {
     constructor() {
         this.balance = 10000;
@@ -12,6 +12,9 @@ class SlotGame {
         this.reels = [];
         this.symbols = [];
         this.paylines = [];
+        this.reelSymbols = [];
+        this.spinAnimation = null;
+        this.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         this.init();
     }
     
@@ -22,40 +25,111 @@ class SlotGame {
         this.createReels();
         this.setupUI();
         this.updateDisplay();
+        this.fixMobileButtons();
     }
     
     initializeSymbols() {
         this.symbols = [
-            { id: 1, name: 'CHERRY', value: 10, weight: 5, icon: '🍒' },
-            { id: 2, name: 'LEMON', value: 5, weight: 10, icon: '🍋' },
-            { id: 3, name: 'ORANGE', value: 8, weight: 7, icon: '🍊' },
-            { id: 4, name: 'PLUM', value: 12, weight: 4, icon: '🟣' },
-            { id: 5, name: 'BELL', value: 20, weight: 3, icon: '🔔' },
-            { id: 6, name: 'BAR', value: 15, weight: 5, icon: '📊' },
-            { id: 7, name: 'SEVEN', value: 100, weight: 1, icon: '7️⃣' },
-            { id: 8, name: 'WILD', value: 50, weight: 2, icon: '🌟', isWild: true },
-            { id: 9, name: 'BONUS', value: 0, weight: 2, icon: '🎁', isBonus: true },
-            { id: 10, name: 'SCATTER', value: 0, weight: 3, icon: '💎', isScatter: true }
+            { 
+                id: 1, 
+                name: 'CONECT', 
+                value: 10, 
+                weight: 5, 
+                type: 'normal',
+                image: 'assets/images/conect.png'
+            },
+            { 
+                id: 2, 
+                name: 'EMET', 
+                value: 5, 
+                weight: 10, 
+                type: 'normal',
+                image: 'assets/images/emet.png'
+            },
+            { 
+                id: 3, 
+                name: 'HACKER', 
+                value: 8, 
+                weight: 7, 
+                type: 'normal',
+                image: 'assets/images/hacker.png'
+            },
+            { 
+                id: 4, 
+                name: 'ROBOTICA', 
+                value: 12, 
+                weight: 4, 
+                type: 'normal',
+                image: 'assets/images/robotica.png'
+            },
+            { 
+                id: 5, 
+                name: 'WILDBONUS', 
+                value: 20, 
+                weight: 3, 
+                type: 'wild',
+                image: 'assets/images/wildbonus.png'
+            },
+            { 
+                id: 6, 
+                name: 'BAR', 
+                value: 15, 
+                weight: 5, 
+                type: 'bonus',
+                image: 'assets/images/robotica.png'
+            },
+            { 
+                id: 7, 
+                name: 'SEVEN', 
+                value: 100, 
+                weight: 1, 
+                type: 'scatter',
+                image: 'assets/images/hacker.png'
+            }
         ];
     }
     
     initializePaylines() {
         this.paylines = [
-            { id: 1, positions: [0, 0, 0, 0, 0], name: 'Top Line' },
-            { id: 2, positions: [1, 1, 1, 1, 1], name: 'Middle Line' },
-            { id: 3, positions: [2, 2, 2, 2, 2], name: 'Bottom Line' },
-            { id: 4, positions: [0, 1, 2, 1, 0], name: 'V Shape' },
-            { id: 5, positions: [2, 1, 0, 1, 2], name: 'Inverted V' }
+            { 
+                id: 1, 
+                positions: [0, 0, 0, 0, 0], 
+                name: 'Top Line',
+                color: '#00f5ff'
+            },
+            { 
+                id: 2, 
+                positions: [1, 1, 1, 1, 1], 
+                name: 'Middle Line',
+                color: '#b967ff'
+            },
+            { 
+                id: 3, 
+                positions: [2, 2, 2, 2, 2], 
+                name: 'Bottom Line',
+                color: '#ff2e8b'
+            },
+            { 
+                id: 4, 
+                positions: [0, 1, 2, 1, 0], 
+                name: 'V Shape',
+                color: '#00ff00'
+            },
+            { 
+                id: 5, 
+                positions: [2, 1, 0, 1, 2], 
+                name: 'Inverted V',
+                color: '#ffff00'
+            }
         ];
     }
     
     createReels() {
         const totalWeight = this.symbols.reduce((sum, symbol) => sum + symbol.weight, 0);
         
-        // Create 5 reels with 20 symbols each
         for (let reelIndex = 0; reelIndex < 5; reelIndex++) {
             this.reels[reelIndex] = [];
-            for (let i = 0; i < 20; i++) {
+            for (let i = 0; i < 30; i++) {
                 let random = Math.random() * totalWeight;
                 let selectedSymbol = null;
                 
@@ -79,47 +153,150 @@ class SlotGame {
         if (!reelsContainer) return;
         
         reelsContainer.innerHTML = '';
+        this.reelSymbols = [];
         
         for (let reelIndex = 0; reelIndex < 5; reelIndex++) {
             const reelElement = document.createElement('div');
             reelElement.className = 'reel';
-            reelElement.id = `reel${reelIndex + 1}`;
+            reelElement.id = `reel${reelIndex}`;
+            reelElement.dataset.index = reelIndex;
             
             const reelInner = document.createElement('div');
             reelInner.className = 'reel-inner';
+            reelInner.id = `reelInner${reelIndex}`;
             
-            // Show 3 visible symbols
-            for (let row = 0; row < 3; row++) {
+            const reelSymbols = [];
+            for (let row = 0; row < 4; row++) {
                 const symbol = this.reels[reelIndex][row] || this.symbols[0];
+                reelSymbols.push(symbol);
+                
                 const symbolElement = document.createElement('div');
-                symbolElement.className = `symbol ${symbol.name.toLowerCase()}`;
-                symbolElement.textContent = symbol.icon;
-                symbolElement.title = symbol.name;
+                symbolElement.className = `symbol ${symbol.type}`;
+                symbolElement.dataset.row = row;
+                symbolElement.dataset.reel = reelIndex;
+                symbolElement.dataset.symbol = symbol.name;
+                
+                const img = document.createElement('img');
+                img.src = symbol.image;
+                img.alt = symbol.name;
+                img.className = 'symbol-img';
+                img.loading = 'lazy';
+                
+                symbolElement.appendChild(img);
                 reelInner.appendChild(symbolElement);
             }
             
+            this.reelSymbols.push(reelSymbols);
             reelElement.appendChild(reelInner);
             reelsContainer.appendChild(reelElement);
         }
     }
     
     setupUI() {
-        // Spin button
+        // SPIN button
         const spinBtn = document.getElementById('spinBtn');
         if (spinBtn) {
             spinBtn.addEventListener('click', () => this.spin());
+            spinBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                if (!this.isSpinning) this.spin();
+            });
         }
         
-        // Bet controls
+        // BET buttons
         const betUp = document.getElementById('betUp');
         const betDown = document.getElementById('betDown');
         const maxBet = document.getElementById('maxBet');
         const autoSpin = document.getElementById('autoSpin');
         
-        if (betUp) betUp.addEventListener('click', () => this.changeBet(50));
-        if (betDown) betDown.addEventListener('click', () => this.changeBet(-50));
-        if (maxBet) maxBet.addEventListener('click', () => this.setMaxBet());
-        if (autoSpin) autoSpin.addEventListener('click', () => this.toggleAutoSpin());
+        if (betUp) {
+            betUp.addEventListener('click', () => this.changeBet(50));
+            betUp.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                this.changeBet(50);
+            });
+        }
+        
+        if (betDown) {
+            betDown.addEventListener('click', () => this.changeBet(-50));
+            betDown.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                this.changeBet(-50);
+            });
+        }
+        
+        if (maxBet) {
+            maxBet.addEventListener('click', () => this.setMaxBet());
+            maxBet.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                this.setMaxBet();
+            });
+        }
+        
+        if (autoSpin) {
+            autoSpin.addEventListener('click', () => this.toggleAutoSpin());
+            autoSpin.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                this.toggleAutoSpin();
+            });
+        }
+        
+        // Audio buttons
+        const muteBtn = document.getElementById('muteBtn');
+        const musicToggle = document.getElementById('musicToggle');
+        
+        if (muteBtn) {
+            muteBtn.addEventListener('click', () => {
+                if (window.audioManager) {
+                    window.audioManager.toggleMute();
+                }
+            });
+        }
+        
+        if (musicToggle) {
+            musicToggle.addEventListener('click', () => {
+                if (window.audioManager) {
+                    if (window.audioManager.backgroundMusic && !window.audioManager.backgroundMusic.paused) {
+                        window.audioManager.pauseBackgroundMusic();
+                    } else {
+                        window.audioManager.startBackgroundMusic();
+                    }
+                }
+            });
+        }
+    }
+    
+    fixMobileButtons() {
+        // Ensure buttons are properly sized for mobile
+        if (this.isMobile) {
+            setTimeout(() => {
+                const spinBtn = document.getElementById('spinBtn');
+                const autoBtn = document.getElementById('autoSpin');
+                const maxBtn = document.getElementById('maxBet');
+                
+                if (spinBtn) {
+                    spinBtn.style.minHeight = '50px';
+                    spinBtn.style.minWidth = '140px';
+                    spinBtn.style.fontSize = '1.2em';
+                }
+                
+                if (autoBtn && maxBtn) {
+                    autoBtn.style.minHeight = '44px';
+                    autoBtn.style.minWidth = '90px';
+                    autoBtn.style.fontSize = '1em';
+                    
+                    maxBtn.style.minHeight = '44px';
+                    maxBtn.style.minWidth = '90px';
+                    maxBtn.style.fontSize = '1em';
+                }
+                
+                // Fix info boxes borders
+                const infoBoxes = document.querySelectorAll('.info-box');
+                infoBoxes.forEach(box => {
+                    box.style.border = '1px solid #00f5ff';
+                });
+            }, 1000);
+        }
     }
     
     changeBet(amount) {
@@ -141,7 +318,7 @@ class SlotGame {
         this.playSound('click');
     }
     
-    spin() {
+    async spin() {
         if (this.isSpinning) return;
         
         if (this.balance < this.betAmount) {
@@ -153,113 +330,127 @@ class SlotGame {
         this.isSpinning = true;
         this.currentWin = 0;
         
-        // Deduct bet
+        this.clearWinLines();
         this.balance -= this.betAmount;
         this.updateDisplay();
         
-        // Play spin sound
+        // Play spin sound only once
         this.playSound('spin');
         
-        // Start background music on first spin
+        const spinBtn = document.getElementById('spinBtn');
+        if (spinBtn) {
+            spinBtn.classList.add('loading');
+            spinBtn.disabled = true;
+        }
+        
+        // Start background music on first spin if not started
         if (window.audioManager && !window.audioManager.isBackgroundMusicStarted) {
             window.audioManager.startBackgroundMusic();
         }
         
-        // Animate reels
-        this.animateReels().then(() => {
-            // Check for wins
-            const winResult = this.checkWins();
-            this.currentWin = winResult.totalWin;
+        // Start spinning animation
+        await this.startSpinningAnimation();
+        
+        // Stop spinning and show results
+        await this.stopSpinningAnimation();
+        
+        // Check for wins AFTER all reels stop
+        const winResult = this.checkWins();
+        this.currentWin = winResult.totalWin;
+        
+        if (this.currentWin > 0) {
+            this.balance += this.currentWin;
+            // Play win sound ONLY when there's a win
+            this.playWinSound(this.currentWin);
+            this.showWinAnimation(this.currentWin);
+            this.highlightWinningSymbols(winResult.winningLines);
             
-            // Add winnings to balance
-            if (this.currentWin > 0) {
-                this.balance += this.currentWin;
-                
-                // Play win sound
-                this.playWinSound(this.currentWin);
-                
-                // Show win animation
-                this.showWinAnimation(this.currentWin);
-                
-                // Check for jackpot
-                if (this.currentWin >= this.jackpot) {
-                    this.triggerJackpot();
-                }
+            if (this.currentWin >= this.jackpot) {
+                this.triggerJackpot();
             }
-            
-            // Update display
-            this.updateDisplay();
-            this.isSpinning = false;
-            
-            // Auto-spin if enabled
-            if (this.autoSpin && this.balance >= this.betAmount) {
-                setTimeout(() => this.spin(), 2000);
-            }
-        });
+        } else {
+            // Play lose sound when no win
+            this.playSound('lose');
+        }
+        
+        this.updateDisplay();
+        this.isSpinning = false;
+        
+        if (spinBtn) {
+            spinBtn.classList.remove('loading');
+            spinBtn.disabled = this.balance < this.betAmount;
+        }
+        
+        if (this.autoSpin && this.balance >= this.betAmount) {
+            setTimeout(() => this.spin(), 2000);
+        }
     }
     
-    async animateReels() {
+    async startSpinningAnimation() {
         const reels = document.querySelectorAll('.reel');
-        const spinDuration = 1000;
         
         // Start all reels spinning
         reels.forEach((reel, index) => {
-            reel.classList.add('reel-spinning');
-            
-            // Stop each reel with delay
-            setTimeout(() => {
-                reel.classList.remove('reel-spinning');
-                this.playSound('reelStop');
-                this.updateReelDisplay(index);
-            }, spinDuration + (index * 300));
+            reel.classList.add('spinning');
         });
         
-        // Wait for all reels to stop
-        await new Promise(resolve => {
-            setTimeout(resolve, spinDuration + (reels.length * 300) + 500);
-        });
+        // Wait for spinning duration
+        await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+    
+    async stopSpinningAnimation() {
+        const reels = document.querySelectorAll('.reel');
+        const delays = [300, 400, 500, 400, 300]; // Different stop delays for each reel
+        
+        // Stop each reel with a staggered delay for visual effect
+        for (let i = 0; i < reels.length; i++) {
+            await new Promise(resolve => {
+                setTimeout(() => {
+                    reels[i].classList.remove('spinning');
+                    this.updateReelDisplay(i);
+                    resolve();
+                }, delays[i]);
+            });
+        }
+        
+        // Small pause after all reels stop
+        await new Promise(resolve => setTimeout(resolve, 300));
     }
     
     updateReelDisplay(reelIndex) {
-        const reel = this.reels[reelIndex];
-        const reelElement = document.getElementById(`reel${reelIndex + 1}`);
+        const reelInner = document.getElementById(`reelInner${reelIndex}`);
+        if (!reelInner) return;
         
-        if (!reelElement) return [];
+        const startIndex = Math.floor(Math.random() * 20);
+        const symbolElements = reelInner.querySelectorAll('.symbol');
         
-        const reelInner = reelElement.querySelector('.reel-inner');
-        if (!reelInner) return [];
-        
-        reelInner.innerHTML = '';
-        const visibleSymbols = [];
-        
-        // Get 3 random symbols for display
-        const startIndex = Math.floor(Math.random() * (reel.length - 3));
-        
-        for (let i = 0; i < 3; i++) {
-            const symbol = reel[startIndex + i];
-            visibleSymbols.push(symbol);
+        for (let row = 0; row < 4; row++) {
+            const symbolIndex = (startIndex + row) % this.reels[reelIndex].length;
+            const symbol = this.reels[reelIndex][symbolIndex];
+            const symbolElement = symbolElements[row];
             
-            const symbolElement = document.createElement('div');
-            symbolElement.className = `symbol ${symbol.name.toLowerCase()}`;
-            symbolElement.textContent = symbol.icon;
-            symbolElement.title = symbol.name;
-            reelInner.appendChild(symbolElement);
+            if (symbolElement) {
+                symbolElement.className = `symbol ${symbol.type} landing`;
+                symbolElement.dataset.symbol = symbol.name;
+                const img = symbolElement.querySelector('img');
+                if (img) {
+                    img.src = symbol.image;
+                    img.alt = symbol.name;
+                }
+                
+                // Remove landing animation class after animation completes
+                setTimeout(() => {
+                    symbolElement.classList.remove('landing');
+                }, 300);
+            }
         }
-        
-        return visibleSymbols;
     }
     
     checkWins() {
-        // Get visible symbols from all reels
-        const visibleSymbols = [];
-        for (let i = 0; i < 5; i++) {
-            visibleSymbols.push(this.getVisibleSymbols(i));
-        }
-        
+        const visibleSymbols = this.getVisibleSymbols();
         let totalWin = 0;
         const winningLines = [];
         
-        // Check each payline
         this.paylines.forEach(payline => {
             const lineSymbols = [];
             for (let col = 0; col < 5; col++) {
@@ -269,168 +460,170 @@ class SlotGame {
             const winAmount = this.checkLineWin(lineSymbols);
             if (winAmount > 0) {
                 totalWin += winAmount;
-                winningLines.push({ payline, winAmount });
+                winningLines.push({ 
+                    payline, 
+                    winAmount,
+                    positions: lineSymbols.map((symbol, col) => ({
+                        col,
+                        row: payline.positions[col]
+                    }))
+                });
             }
         });
-        
-        // Check for scatter wins
-        const scatterCount = this.countScatters(visibleSymbols);
-        if (scatterCount >= 3) {
-            const scatterWin = this.calculateScatterWin(scatterCount);
-            totalWin += scatterWin;
-            
-            if (scatterCount >= 4) {
-                this.triggerBonus();
-            }
-        }
-        
-        // Check for bonus symbols
-        const bonusCount = this.countBonusSymbols(visibleSymbols);
-        if (bonusCount >= 3) {
-            this.triggerFreeSpins(bonusCount);
-        }
-        
-        // Apply multiplier
-        totalWin *= this.winMultiplier;
-        
-        // Highlight winning lines
-        this.highlightWinningLines(winningLines);
         
         return { totalWin, winningLines };
     }
     
-    getVisibleSymbols(reelIndex) {
-        const reelElement = document.getElementById(`reel${reelIndex + 1}`);
-        if (!reelElement) return [];
+    getVisibleSymbols() {
+        const visibleSymbols = [];
         
-        const symbols = [];
-        const symbolElements = reelElement.querySelectorAll('.symbol');
+        for (let reelIndex = 0; reelIndex < 5; reelIndex++) {
+            const reelSymbols = [];
+            for (let row = 0; row < 3; row++) {
+                const symbolElement = document.querySelector(
+                    `.symbol[data-reel="${reelIndex}"][data-row="${row}"]`
+                );
+                
+                if (symbolElement) {
+                    const symbolName = symbolElement.dataset.symbol || 'CONECT';
+                    const symbol = this.symbols.find(s => s.name === symbolName) || this.symbols[0];
+                    reelSymbols.push(symbol);
+                } else {
+                    reelSymbols.push(this.symbols[0]);
+                }
+            }
+            visibleSymbols.push(reelSymbols);
+        }
         
-        symbolElements.forEach(element => {
-            const symbolName = element.className.replace('symbol ', '').toUpperCase();
-            const symbol = this.symbols.find(s => s.name === symbolName) || this.symbols[0];
-            symbols.push(symbol);
-        });
-        
-        return symbols;
+        return visibleSymbols;
     }
     
     checkLineWin(symbols) {
-        let consecutive = 1;
+        let count = 1;
         let firstSymbol = symbols[0];
-        let hasWild = firstSymbol.isWild;
         
         for (let i = 1; i < symbols.length; i++) {
-            const currentSymbol = symbols[i];
-            
-            if (currentSymbol.isWild) {
-                hasWild = true;
-                consecutive++;
-            } else if (currentSymbol.name === firstSymbol.name || firstSymbol.isWild) {
-                consecutive++;
-                if (firstSymbol.isWild) {
-                    firstSymbol = currentSymbol;
+            if (symbols[i].name === firstSymbol.name || 
+                symbols[i].type === 'wild' || 
+                firstSymbol.type === 'wild') {
+                count++;
+                if (firstSymbol.type === 'wild' && symbols[i].type !== 'wild') {
+                    firstSymbol = symbols[i];
                 }
             } else {
                 break;
             }
         }
         
-        if (consecutive >= 3) {
+        if (count >= 3) {
             let winMultiplier = 1;
-            if (consecutive === 4) winMultiplier = 2;
-            if (consecutive === 5) winMultiplier = 3;
+            if (count === 4) winMultiplier = 2;
+            if (count === 5) winMultiplier = 3;
             
-            return firstSymbol.value * consecutive * winMultiplier * this.betAmount / 10;
+            return firstSymbol.value * count * winMultiplier * this.betAmount / 10;
         }
         
         return 0;
     }
     
-    countScatters(symbolGrid) {
-        let count = 0;
-        for (let col = 0; col < 5; col++) {
-            for (let row = 0; row < 3; row++) {
-                if (symbolGrid[col][row]?.isScatter) {
-                    count++;
+    highlightWinningSymbols(winningLines) {
+        document.querySelectorAll('.symbol.win').forEach(el => {
+            el.classList.remove('win');
+        });
+        
+        winningLines.forEach(({ positions }) => {
+            positions.forEach(({ col, row }) => {
+                const symbol = document.querySelector(
+                    `.symbol[data-reel="${col}"][data-row="${row}"]`
+                );
+                if (symbol) {
+                    symbol.classList.add('win');
                 }
-            }
-        }
-        return count;
+            });
+        });
+        
+        this.drawWinLines(winningLines);
     }
     
-    countBonusSymbols(symbolGrid) {
-        let count = 0;
-        for (let col = 0; col < 5; col++) {
-            for (let row = 0; row < 3; row++) {
-                if (symbolGrid[col][row]?.isBonus) {
-                    count++;
+    drawWinLines(winningLines) {
+        const paylinesContainer = document.getElementById('paylines');
+        if (!paylinesContainer) return;
+        
+        paylinesContainer.innerHTML = '';
+        
+        winningLines.forEach(({ payline }) => {
+            const line = document.createElement('div');
+            line.className = 'win-line';
+            line.style.cssText = `
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                pointer-events: none;
+                z-index: 15;
+            `;
+            
+            const svgNS = "http://www.w3.org/2000/svg";
+            const svg = document.createElementNS(svgNS, "svg");
+            svg.setAttribute('width', '100%');
+            svg.setAttribute('height', '100%');
+            svg.style.position = 'absolute';
+            svg.style.top = '0';
+            svg.style.left = '0';
+            
+            const path = document.createElementNS(svgNS, "path");
+            
+            // Calculate positions based on reel layout
+            const reelWidth = 20; // Percentage width per reel
+            const symbolHeight = 33.33; // Percentage height per symbol
+            
+            let pathData = 'M ';
+            payline.positions.forEach((row, i) => {
+                const x = (i * reelWidth) + (reelWidth / 2);
+                const y = (row * symbolHeight) + (symbolHeight / 2);
+                pathData += `${x} ${y} `;
+                if (i < payline.positions.length - 1) {
+                    pathData += 'L ';
                 }
-            }
-        }
-        return count;
-    }
-    
-    calculateScatterWin(count) {
-        const values = { 3: 5, 4: 20, 5: 100 };
-        return (values[count] || 0) * this.betAmount;
-    }
-    
-    triggerBonus() {
-        console.log('🎁 BONUS ROUND TRIGGERED!');
-        this.showMessage("BONUS ROUND!", "bonus");
-        this.playSound('bigWin');
-        
-        // Random multiplier 2x-5x
-        this.winMultiplier = Math.floor(Math.random() * 4) + 2;
-        
-        // Update multiplier display
-        this.updateFeaturesDisplay();
-        
-        // Remove multiplier after 5 spins
-        setTimeout(() => {
-            this.winMultiplier = 1;
-            this.updateFeaturesDisplay();
-        }, 5000);
-    }
-    
-    triggerFreeSpins(count) {
-        const freeSpinsCount = { 3: 5, 4: 10, 5: 15 }[count] || 0;
-        
-        if (freeSpinsCount > 0) {
-            this.freeSpins = freeSpinsCount;
-            this.showMessage(`🎯 ${freeSpinsCount} FREE SPINS!`, "free-spin");
-            this.playSound('bigWin');
-            this.updateFeaturesDisplay();
+            });
             
-            // Start free spins
-            this.startFreeSpins();
-        }
+            path.setAttribute('d', pathData);
+            path.setAttribute('stroke', payline.color);
+            path.setAttribute('stroke-width', '4');
+            path.setAttribute('fill', 'none');
+            path.setAttribute('stroke-dasharray', '10,5');
+            path.style.filter = 'drop-shadow(0 0 10px currentColor)';
+            
+            svg.appendChild(path);
+            line.appendChild(svg);
+            paylinesContainer.appendChild(line);
+        });
     }
     
-    startFreeSpins() {
-        if (this.freeSpins <= 0) return;
+    clearWinLines() {
+        const paylinesContainer = document.getElementById('paylines');
+        if (paylinesContainer) {
+            paylinesContainer.innerHTML = '';
+        }
         
-        this.betAmount = 0; // Free spins don't cost
-        setTimeout(() => {
-            this.spin();
-            this.freeSpins--;
-            this.updateFeaturesDisplay();
-            
-            if (this.freeSpins > 0) {
-                this.startFreeSpins();
-            }
-        }, 2000);
+        document.querySelectorAll('.symbol.win').forEach(el => {
+            el.classList.remove('win');
+        });
     }
     
     triggerJackpot() {
         console.log('💰 JACKPOT WON!');
         this.showMessage("JACKPOT! 💰", "jackpot");
-        this.playSound('bigWin');
+        this.playSound('jackpot');
+        this.playSound('access');
         
-        // Increase jackpot
         this.jackpot += 1000;
         this.updateDisplay();
+        
+        if (window.particleSystem) {
+            window.particleSystem.createJackpotParticles();
+        }
     }
     
     toggleAutoSpin() {
@@ -442,43 +635,16 @@ class SlotGame {
                 autoBtn.textContent = 'STOP AUTO';
                 autoBtn.style.background = 'linear-gradient(45deg, #ff2e8b, #ff6b00)';
                 
-                // Start auto-spin if enough balance
                 if (this.balance >= this.betAmount && !this.isSpinning) {
-                    this.spin();
+                    setTimeout(() => this.spin(), 1000);
                 }
             } else {
                 autoBtn.textContent = 'AUTO';
                 autoBtn.style.background = 'linear-gradient(45deg, #b967ff, #ff2e8b)';
             }
         }
-    }
-    
-    highlightWinningLines(winningLines) {
-        // Clear previous highlights
-        const paylinesContainer = document.getElementById('paylines');
-        if (paylinesContainer) {
-            paylinesContainer.innerHTML = '';
-        }
         
-        // Add new winning line highlights
-        winningLines.forEach(({ payline }) => {
-            const lineElement = document.createElement('div');
-            lineElement.className = 'payline';
-            lineElement.style.cssText = `
-                top: ${payline.positions[0] * 33.33}%;
-                height: 4px;
-                width: 100%;
-                background: linear-gradient(90deg, transparent, #00f5ff, transparent);
-                box-shadow: 0 0 10px #00f5ff;
-                position: absolute;
-                z-index: 15;
-                animation: fadeIn 0.5s ease;
-            `;
-            
-            if (paylinesContainer) {
-                paylinesContainer.appendChild(lineElement);
-            }
-        });
+        return this.autoSpin;
     }
     
     showWinAnimation(amount) {
@@ -487,17 +653,21 @@ class SlotGame {
         const winAmount = document.getElementById('winAmount');
         
         if (winOverlay && winMessage && winAmount) {
-            // Update win amount
             winAmount.textContent = `$${amount}`;
-            
-            // Show overlay
             winOverlay.style.opacity = '1';
+            winOverlay.style.display = 'block';
             winMessage.classList.add('active');
             
-            // Hide after 3 seconds
+            if (window.particleSystem) {
+                window.particleSystem.createWinParticles(amount);
+            }
+            
             setTimeout(() => {
                 winOverlay.style.opacity = '0';
                 winMessage.classList.remove('active');
+                setTimeout(() => {
+                    winOverlay.style.display = 'none';
+                }, 500);
             }, 3000);
         }
     }
@@ -505,9 +675,8 @@ class SlotGame {
     showMessage(message, type = "info") {
         console.log(`📢 ${message}`);
         
-        // Create notification element
         const notification = document.createElement('div');
-        notification.className = 'notification';
+        notification.className = `notification notification-${type}`;
         notification.textContent = message;
         
         const colors = {
@@ -531,16 +700,18 @@ class SlotGame {
             z-index: 1000;
             transform: translateX(400px);
             transition: transform 0.3s ease;
+            font-size: 1.2em;
+            text-align: center;
+            max-width: 300px;
+            word-wrap: break-word;
         `;
-        
+
         document.body.appendChild(notification);
         
-        // Animate in
         setTimeout(() => {
             notification.style.transform = 'translateX(0)';
         }, 100);
         
-        // Remove after 3 seconds
         setTimeout(() => {
             notification.style.transform = 'translateX(400px)';
             setTimeout(() => {
@@ -552,7 +723,6 @@ class SlotGame {
     }
     
     updateDisplay() {
-        // Update balance
         const balanceEl = document.getElementById('balance');
         if (balanceEl) {
             balanceEl.textContent = this.balance.toLocaleString();
@@ -560,62 +730,25 @@ class SlotGame {
                                   this.balance >= 2000 ? '#ffd700' : '#ffffff';
         }
         
-        // Update bet
         const betEl = document.getElementById('currentBet');
         const betDisplay = document.getElementById('betDisplay');
         if (betEl) betEl.textContent = this.betAmount;
         if (betDisplay) betDisplay.textContent = this.betAmount;
         
-        // Update last win
         const lastWinEl = document.getElementById('lastWin');
         if (lastWinEl) {
             lastWinEl.textContent = this.currentWin;
             lastWinEl.style.color = this.currentWin > 0 ? '#00ff00' : '#ffffff';
         }
         
-        // Update jackpot
         const jackpotEl = document.getElementById('jackpot');
         if (jackpotEl) {
             jackpotEl.textContent = this.jackpot.toLocaleString();
         }
         
-        // Update spin button state
         const spinBtn = document.getElementById('spinBtn');
         if (spinBtn) {
             spinBtn.disabled = this.isSpinning || this.balance < this.betAmount;
-        }
-    }
-    
-    updateFeaturesDisplay() {
-        const freeSpinsEl = document.getElementById('freeSpins');
-        const freeSpinsCount = document.getElementById('freeSpinsCount');
-        const multiplierEl = document.getElementById('multiplier');
-        const multiplierValue = document.getElementById('multiplierValue');
-        const bonusActiveEl = document.getElementById('bonusActive');
-        
-        // Free spins
-        if (freeSpinsEl && freeSpinsCount) {
-            if (this.freeSpins > 0) {
-                freeSpinsCount.textContent = this.freeSpins;
-                freeSpinsEl.style.display = 'block';
-            } else {
-                freeSpinsEl.style.display = 'none';
-            }
-        }
-        
-        // Multiplier
-        if (multiplierEl && multiplierValue) {
-            if (this.winMultiplier > 1) {
-                multiplierValue.textContent = this.winMultiplier;
-                multiplierEl.style.display = 'block';
-            } else {
-                multiplierEl.style.display = 'none';
-            }
-        }
-        
-        // Bonus active
-        if (bonusActiveEl) {
-            bonusActiveEl.style.display = this.winMultiplier > 1 ? 'block' : 'none';
         }
     }
     

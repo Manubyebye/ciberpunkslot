@@ -38,12 +38,14 @@ body {
     width: 100%;
     height: 100%;
     pointer-events: none;
+    z-index: 1;
 }
 
 .shape {
     position: absolute;
     opacity: 0.1;
     animation: float 20s infinite linear;
+    font-size: 2em;
 }
 
 .shape:nth-child(1) { top: 10%; left: 5%; animation-delay: 0s; }
@@ -106,15 +108,19 @@ body {
     background: rgba(0, 0, 0, 0.6);
     padding: 15px 25px;
     border-radius: 15px;
-    border: 1px solid var(--neon-blue);
+    border: 2px solid var(--neon-blue);
     text-align: center;
     min-width: 150px;
+    transition: all 0.3s ease;
+    animation: glow 3s ease-in-out infinite;
 }
 
 .info-label {
     font-size: 0.9em;
     color: var(--neon-blue);
     margin-bottom: 5px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
 .info-value {
@@ -141,6 +147,7 @@ body {
         0 0 30px rgba(185, 103, 255, 0.3);
     padding: 10px;
     gap: 10px;
+    overflow: hidden;
 }
 
 .reel {
@@ -150,12 +157,15 @@ body {
     background: rgba(255, 255, 255, 0.05);
     border-radius: 15px;
     border: 1px solid rgba(255, 255, 255, 0.1);
+    will-change: transform;
 }
 
 .reel-inner {
     position: absolute;
     width: 100%;
-    transition: transform 0.1s linear;
+    height: 400%;
+    top: 0;
+    left: 0;
 }
 
 .symbol {
@@ -163,26 +173,45 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 3.5em;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     position: relative;
+    overflow: hidden;
+}
+
+/* Symbol Images */
+.symbol-img {
+    width: 80%;
+    height: 80%;
+    object-fit: contain;
+    filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.3));
     transition: all 0.3s ease;
 }
 
 /* Special Symbol Styles */
 .symbol.wild {
     background: radial-gradient(circle, rgba(0,245,255,0.2) 0%, transparent 70%);
-    color: var(--neon-blue);
 }
 
 .symbol.scatter {
     background: radial-gradient(circle, rgba(185,103,255,0.2) 0%, transparent 70%);
-    color: var(--neon-purple);
 }
 
 .symbol.bonus {
     background: radial-gradient(circle, rgba(255,46,139,0.2) 0%, transparent 70%);
-    color: var(--neon-pink);
+}
+
+.symbol.win {
+    z-index: 5;
+}
+
+.symbol.win .symbol-img {
+    animation: symbolWin 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) 3;
+    filter: drop-shadow(0 0 20px gold) brightness(1.5);
+}
+
+/* Spinning State */
+.reel.spinning .reel-inner {
+    animation: reelSpin 0.3s linear infinite;
 }
 
 /* Control Panel */
@@ -213,6 +242,8 @@ body {
     font-size: 1.1em;
     cursor: pointer;
     transition: all 0.3s ease;
+    min-width: 80px;
+    min-height: 44px;
 }
 
 .bet-btn:hover {
@@ -230,6 +261,7 @@ body {
     font-size: 1.3em;
     min-width: 150px;
     text-align: center;
+    box-shadow: 0 0 15px rgba(255, 46, 139, 0.5);
 }
 
 .spin-controls {
@@ -252,6 +284,9 @@ body {
     text-transform: uppercase;
     letter-spacing: 2px;
     box-shadow: 0 0 30px rgba(0, 245, 255, 0.5);
+    min-height: 60px;
+    min-width: 120px;
+    position: relative;
 }
 
 .spin-btn:hover {
@@ -265,8 +300,23 @@ body {
     transform: scale(1);
 }
 
+.spin-btn.loading:after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spinLoad 0.8s linear infinite;
+}
+
 .auto-spin {
     background: linear-gradient(45deg, var(--neon-purple), var(--neon-pink));
+    box-shadow: 0 0 30px rgba(185, 103, 255, 0.5);
 }
 
 /* Win Animation Overlay */
@@ -279,6 +329,9 @@ body {
     pointer-events: none;
     opacity: 0;
     z-index: 20;
+    display: none;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(5px);
 }
 
 .win-message {
@@ -295,12 +348,14 @@ body {
     -webkit-text-fill-color: transparent;
     text-shadow: 0 0 50px rgba(255, 215, 0, 0.8);
     text-align: center;
+    text-transform: uppercase;
 }
 
 .win-amount {
     font-size: 2em;
     margin-top: 20px;
     color: #00ff00;
+    text-shadow: 0 0 20px #00ff00;
 }
 
 /* Particle Effects */
@@ -333,12 +388,22 @@ body {
     z-index: 15;
 }
 
-.payline {
+.win-line {
     position: absolute;
-    height: 4px;
-    background: linear-gradient(90deg, transparent, var(--neon-blue), transparent);
-    box-shadow: 0 0 10px var(--neon-blue);
-    opacity: 0;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 15;
+}
+
+.win-line path {
+    stroke-width: 4;
+    fill: none;
+    filter: drop-shadow(0 0 10px currentColor);
+    animation: dashMove 1s linear infinite;
+    stroke-dasharray: 10, 5;
 }
 
 /* Loading Animation */
@@ -364,6 +429,7 @@ body {
     background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+    animation: neonPulse 2s ease-in-out infinite;
 }
 
 .loading-bar {
@@ -379,4 +445,100 @@ body {
     background: linear-gradient(90deg, var(--neon-blue), var(--neon-purple));
     width: 0%;
     transition: width 0.3s ease;
+}
+
+/* Audio Controls */
+.audio-controls {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.audio-btn {
+    background: rgba(0, 0, 0, 0.6);
+    border: 2px solid #00f5ff;
+    color: #00f5ff;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 30;
+}
+
+.audio-btn:hover {
+    background: #00f5ff;
+    color: black;
+    box-shadow: 0 0 20px #00f5ff;
+}
+
+.audio-btn.active {
+    background: #00f5ff;
+    color: black;
+}
+
+/* Features Display */
+.features-display {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    z-index: 25;
+}
+
+.feature-tag {
+    background: linear-gradient(45deg, rgba(0, 245, 255, 0.9), rgba(185, 103, 255, 0.9));
+    color: white;
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-family: 'Orbitron', monospace;
+    font-size: 14px;
+    font-weight: bold;
+    animation: pulse 2s infinite;
+    box-shadow: 0 0 15px rgba(0, 245, 255, 0.5);
+    backdrop-filter: blur(5px);
+}
+
+/* Mobile Safe Areas */
+@supports (padding: max(0px)) {
+    #slotMachine {
+        padding-left: max(15px, env(safe-area-inset-left));
+        padding-right: max(15px, env(safe-area-inset-right));
+        padding-top: max(10px, env(safe-area-inset-top));
+        padding-bottom: max(10px, env(safe-area-inset-bottom));
+    }
+}
+
+/* Win notification */
+.win-notification {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.8);
+    border: 3px solid gold;
+    border-radius: 15px;
+    padding: 20px 40px;
+    text-align: center;
+    z-index: 30;
+    animation: winPop 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.win-notification h2 {
+    color: gold;
+    font-family: 'Orbitron', monospace;
+    font-size: 2em;
+    margin-bottom: 10px;
+}
+
+.win-notification p {
+    color: white;
+    font-size: 1.5em;
+    font-weight: bold;
 }
